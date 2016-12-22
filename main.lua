@@ -19,12 +19,12 @@ local config = {
 	},
 	[1] = { -- theta1
 		min = 775, -- z1 = 90
-		max = 2300, -- z1 = -90
-		default = 1525 -- z1 = 0
+		max = 2325, -- z1 = -90
+		default = 1550 -- z1 = 0
 	},
 	[2] = { -- cap
-		min = 2250,
-		max = 2450,
+		min = 2100,
+		max = 2350,
 		default = 2250
 	},
 	[16] = { -- theta3
@@ -48,7 +48,7 @@ local status = {}
 
 local timeout = 100 -- in miliseconds
 local delay = 0
-local speed = 500 -- per second
+local speed = 600 -- per second
 local lengthA, lengthB, lengthC, height = 16, 14, 17.5, 10 -- in cm
 
 -- convert z1
@@ -132,7 +132,7 @@ function control(p, id, value, force)
 end
 
 local function up(p)
-	control(p, 16, 650)
+	control(p, 16, 700)
 end
 
 local function relax(p)
@@ -168,7 +168,10 @@ function set(id, min, max)
 	end
 end
 
-function sleep()
+function sleep(ext)	
+	if type(ext) == "number" then
+		delay = delay + ext
+	end
 	socket.sleep(delay)
 	delay = 0
 end
@@ -197,13 +200,14 @@ function solve(p, x, y, z)
 	local z3 = math.asin((z - tz) / math.sqrt((x-tx)^2 + (y-ty)^2 + (z-tz)^2))
 	z1, z2, z3 = z1 / math.pi * 180, z2 / math.pi * 180, z3 / math.pi * 180
 	local z4 = -90 - z3
-	print("[solve] " .. z1 ..", " .. z2 ..", " .. z3 ..", " .. z4)
+	--print("[solve] " .. z1 ..", " .. z2 ..", " .. z3 ..", " .. z4)
 	--z3 = z3 + (90 - z2)
 	print("[solve] " .. z1 ..", " .. z2 ..", " .. z3 ..", " .. z4)
 	control(p, 1, config[1].convert(z1))
 	control(p, 0, config[0].convert(z2))
 	sleep()
 	control(p, 16, config[16].convert(z3))
+	sleep()
 	control(p, 18, config[18].convert(z4))
 	sleep()
 end
@@ -231,12 +235,13 @@ io.write("[note] [z1] #1; [z2] #0; [z3] #16; [z4]#18; [z5] #2; [z6] #17. \n")
 init(p)
 
 local preset = {
-	["ºĞ×Ó"] = {10, 0, -3},
-	["Ì«¹Ä"] = {10, 0, -3},
-	["²ÖÊó"] = {-10, 0, -3},
-	["Ç°Ãæ"] = {0, 20, 0},
-	["Ì«¹ÄÉÏ"] = {0, 20, 5},
-	["ºĞ×ÓÉÏ"] = {0, 20, 5}
+	["å¤ªé¼“"] = {-15, 15, 0},
+	["ä»“é¼ "] = {15, 15, 0},
+	["å°ç‹—"] = {15, 0, 0},
+	["å°ç‰›"] = {-15, 0, 0},
+	["å°ç‰›ä¸Š"] = {-15, 0, 5},
+	["ä¹Œé¾Ÿä¸Š"] = {0, 10, 5},
+	["å¤ªé¼“ä¸Š"] = {-15, 15, 8},
 }
 -- command line
 while true do 
@@ -258,7 +263,7 @@ while true do
 	elseif cmd:find("voice") then
 		-- voice control
 		local server = socket.tcp()
-		server:bind("*", "8865")
+		server:bind("*", "8877")
 		server:listen(8)
 		while true do
 			local client = server:accept()
@@ -266,28 +271,30 @@ while true do
 			local ret = res:match("^.-input=(%S+)")
 			if ret then
 				print("[info] received command: " .. ret)
-				if ret == "Í£Ö¹¿ØÖÆ" then
+				if ret == "åœæ­¢æ§åˆ¶" then
 					break
-				elseif ret == "³õÊ¼»¯" then
+				elseif ret == "åˆå§‹åŒ–" then
 					init(p)
-				elseif ret:find("×¥Æğ(%S+)") then
-					local obj = ret:match("×¥Æğ(%S+)")
+				elseif ret:find("æŠ“èµ·(%S+)") then
+					local obj = ret:match("æŠ“èµ·(%S+)")
 					if preset[obj] then
 						up(p)
 						relax(p)
 						solve(p, preset[obj][1], preset[obj][2], preset[obj][3])
 						socket.sleep(0.5)
 						catch(p)
+						sleep()
 						up(p)
 					else
 						print("[warning] unknown position.")
 					end
-				elseif ret:find("·ÅÔÚ(%S+)") then
-					local pos = ret:match("·ÅÔÚ(%S+)")
+				elseif ret:find("æ”¾åœ¨(%S+)") then
+					local pos = ret:match("æ”¾åœ¨(%S+)")
 					if preset[pos] then
 						solve(p, preset[pos][1], preset[pos][2], preset[pos][3])
-						socket.sleep(0.5)
+						sleep(0.5)
 						relax(p)
+						sleep(1)
 						up(p)
 					else
 						print("[warning] unknown position.")
