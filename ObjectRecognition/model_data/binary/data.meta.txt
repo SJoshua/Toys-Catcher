@@ -1,0 +1,9 @@
+turtle
+drum
+dog
+penguin
+Mishi
+hamster
+chick
+calf
+blank

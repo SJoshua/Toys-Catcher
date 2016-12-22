@@ -1,0 +1,6 @@
+#ABNF 1.0 UTF-8;
+language zh-CN;
+mode voice;
+root $main;
+$main = $operate;
+$operate = 抓起盒子|抓起太鼓|抓起仓鼠|放在盒子上|放在太鼓上|放在前面|停止控制|初始化;
